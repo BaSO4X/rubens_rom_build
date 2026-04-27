@@ -10,7 +10,7 @@ Yellow='\033[1;33m' # 粗体黄色
 Blue='\033[1;34m'   # 粗体蓝色
 Green='\033[1;32m'  # 粗体绿色
 
-device=marble # 设备代号
+device=rubens # 设备代号
 
 # 移植包 OS 版本号
 port_os_version=$(echo "$URL" | awk -F'/' '{print $(NF-1)}')
@@ -33,13 +33,11 @@ e2fsdroid="$GITHUB_WORKSPACE"/tools/e2fsdroid
 erofs_extract="$GITHUB_WORKSPACE"/tools/extract.erofs
 erofs_mkfs="$GITHUB_WORKSPACE"/tools/mkfs.erofs
 lpmake="$GITHUB_WORKSPACE"/tools/lpmake
+img2simg="$GITHUB_WORKSPACE"/tools/img2simg
 
 mkdir -p "$GITHUB_WORKSPACE"/tools
-mkdir -p "$GITHUB_WORKSPACE"/firmware
-mkdir -p "$GITHUB_WORKSPACE"/files
 
 chmod -R 755 "$GITHUB_WORKSPACE"/tools
-chmod -R 755 "$GITHUB_WORKSPACE"/firmware
 chmod -R 755 "$GITHUB_WORKSPACE"/files
 
 
@@ -104,8 +102,7 @@ rm -rf "$GITHUB_WORKSPACE"/${vendor_zip_name}
 End_Time 解压底包
 
 echo -e "${Red}- 开始解底包 Payload"
-$payload_extract -s -o "$GITHUB_WORKSPACE"/firmware/images -i "$GITHUB_WORKSPACE"/vendor_zip/payload.bin -X abl,aop,aop_config,bluetooth,boot,cpucp,devcfg,dsp,dtbo,featenabler,hyp,keymaster,modem,qupfw,shrm,tz,uefi,uefisecapp,vendor_boot,xbl,xbl_config,xbl_ramdump,vbmeta,vbmeta_system -T0
-$payload_extract -s -o "$GITHUB_WORKSPACE"/Extra_dir -i "$GITHUB_WORKSPACE"/vendor_zip/payload.bin -X vendor,odm,vendor_dlkm -T0
+$payload_extract -s -o "$GITHUB_WORKSPACE"/Extra_dir -i "$GITHUB_WORKSPACE"/vendor_zip/payload.bin -X vendor,odm,vendor_dlkm,odm_dlkm -T0
 sudo rm -rf "$GITHUB_WORKSPACE"/vendor_zip/payload.bin
 
 echo -e "${Yellow}- 开始解压移植包"
@@ -119,18 +116,12 @@ $payload_extract -s -o "$GITHUB_WORKSPACE"/Extra_dir -i "$GITHUB_WORKSPACE"/port
 sudo rm -rf "$GITHUB_WORKSPACE"/port_zip/payload.bin
 
 echo -e "${Red}- 开始分解Images"
-for i in system_ext vendor mi_ext system product odm vendor_dlkm; do
+for i in system_ext vendor mi_ext system product odm vendor_dlkm odm_dlkm; do
   echo -e "${Yellow}- 正在分解底包: $i.img"
   cd "$GITHUB_WORKSPACE"/images
   sudo $erofs_extract -i "$GITHUB_WORKSPACE"/Extra_dir/$i.img -x -s
   rm -rf "$GITHUB_WORKSPACE"/Extra_dir/$i.img
 done
-echo -e "${Red}- 下载recovery.img"
-curl -s https://api.github.com/repos/AviderMin/ofrp_device_xiaomi_marble/releases/latest | grep -o 'https://[^"]*\.img' | xargs -I {} aria2c -x16 -s16 -o recovery.img {} -d "${GITHUB_WORKSPACE}/firmware/images"
-# 去除 AVB2.0 校验
-echo -e "${Red}- 去除 AVB2.0 校验"
-"$GITHUB_WORKSPACE"/tools/vbmeta-disable-verification "$GITHUB_WORKSPACE"/firmware/images/vbmeta.img
-"$GITHUB_WORKSPACE"/tools/vbmeta-disable-verification "$GITHUB_WORKSPACE"/firmware/images/vbmeta_system.img
 ### 解包结束
 
 ### 写入变量
@@ -208,69 +199,28 @@ rm -rf "$GITHUB_WORKSPACE"/images/product/priv-app/MiuiCamera
 rm -rf "$GITHUB_WORKSPACE"/images/product/pangu/system/app/Nfc_st
 rm -rf "$GITHUB_WORKSPACE"/images/mi_ext/product/ai/taiyi
 echo "精简apk完成"
-echo "正在执行特定机型操作..."
-if [ "$model" = "popsicle" ] || [ "$model" = "pandora" ] || [ "$model" = "pudding" ] || [ "$model" = "nezha" ]; then
-  echo "当前机型为17系列 $model"
-  echo "正在复制文件..."
-  mkdir -p "$GITHUB_WORKSPACE"/images
-  \cp -rf "$GITHUB_WORKSPACE"/files/common/* "$GITHUB_WORKSPACE"/images/
-  echo "处理build.prop"
-  cat "$GITHUB_WORKSPACE"/files/build.prop >> "$GITHUB_WORKSPACE"/images/mi_ext/etc/build.prop
-  echo "ro.display.enable_pwm_switch=false" >> "$GITHUB_WORKSPACE"/images/mi_ext/etc/build.prop
-  curl -s https://api.github.com/repos/BaSO4X/Backup/releases/tags/backup | grep -o 'https://[^"]*com\.android\.vndk\.v30\.apex' | xargs -I {} aria2c -x16 -s16 -o com.android.vndk.v30.apex {} -d "${GITHUB_WORKSPACE}/images/system_ext/apex"
-elif [ "$model" = "vermeer" ] || [ "$model" = "fuxi" ] || [ "$model" = "nuwa" ] || [ "$model" = "ishtar" ]; then
-  echo "当前机型为8gen2系列 $model"
-  echo "正在复制文件..."
-  mkdir -p "$GITHUB_WORKSPACE"/images
-  \cp -rf "$GITHUB_WORKSPACE"/files/8gen2/* "$GITHUB_WORKSPACE"/images/
-  echo "处理build.prop"
-  cat "$GITHUB_WORKSPACE"/files/8gen2_build.prop >> "$GITHUB_WORKSPACE"/images/mi_ext/etc/build.prop
-else
-  echo "当前机型为其他机型 $model"
-  echo "正在复制文件..."
-  mkdir -p "$GITHUB_WORKSPACE"/images
-  \cp -rf "$GITHUB_WORKSPACE"/files/common/* "$GITHUB_WORKSPACE"/images/
-  echo "处理build.prop"
-  cat "$GITHUB_WORKSPACE"/files/build.prop >> "$GITHUB_WORKSPACE"/images/mi_ext/etc/build.prop
-  curl -s https://api.github.com/repos/BaSO4X/Backup/releases/tags/backup | grep -o 'https://[^"]*com\.android\.vndk\.v30\.apex' | xargs -I {} aria2c -x16 -s16 -o com.android.vndk.v30.apex {} -d "${GITHUB_WORKSPACE}/images/system_ext/apex"
-fi
-echo "特定机型操作完成..."
-curl -s https://api.github.com/repos/BaSO4X/Backup/releases/tags/backup | grep -o 'https://[^"]*MiuiCamera\.apk' | xargs -I {} aria2c -x16 -s16 -o MiuiCamera.apk {} -d "${GITHUB_WORKSPACE}/images/product/priv-app/MiuiCamera"
-if [ "$model" = "vermeer" ] || [ "$model" = "fuxi" ] || [ "$model" = "nuwa" ] || [ "$model" = "ishtar" ]; then
-  echo "跳过更换GPU驱动"
-else
-  echo "开始更换GPU驱动"
-  mkdir -p "$GITHUB_WORKSPACE"/images
-  \cp -rf "$GITHUB_WORKSPACE"/files/gpu_drivers/* "$GITHUB_WORKSPACE"/images/
-  echo "/vendor/lib/libllvm-qgl\.so u:object_r:same_process_hal_file:s0" | sudo tee -a "$GITHUB_WORKSPACE"/images/config/vendor_file_contexts
-  echo "vendor/lib/libllvm-qgl.so 0 0 0644" | sudo tee -a "$GITHUB_WORKSPACE"/images/config/vendor_fs_config
-  echo "/vendor/lib64/libllvm-qgl\.so u:object_r:same_process_hal_file:s0" | sudo tee -a "$GITHUB_WORKSPACE"/images/config/vendor_file_contexts
-  echo "vendor/lib64/libllvm-qgl.so 0 0 0644" | sudo tee -a "$GITHUB_WORKSPACE"/images/config/vendor_fs_config
-  echo "/vendor/lib/libdmabufheap\.so u:object_r:same_process_hal_file:s0" | sudo tee -a "$GITHUB_WORKSPACE"/images/config/vendor_file_contexts
-  echo "vendor/lib/libdmabufheap.so 0 0 0644" | sudo tee -a "$GITHUB_WORKSPACE"/images/config/vendor_fs_config
-  echo "/vendor/lib64/libdmabufheap\.so u:object_r:same_process_hal_file:s0" | sudo tee -a "$GITHUB_WORKSPACE"/images/config/vendor_file_contexts
-  echo "vendor/lib64/libdmabufheap.so 0 0 0644" | sudo tee -a "$GITHUB_WORKSPACE"/images/config/vendor_fs_config
-  echo "vendor/lib/egl/libVkLayer_ADRENO_qprofiler.so 0 0 0644" | sudo tee -a "$GITHUB_WORKSPACE"/images/config/vendor_fs_config
-  echo "/vendor/lib/egl/libVkLayer_ADRENO_qprofiler\.so u:object_r:system_lib_file:s0" | sudo tee -a "$GITHUB_WORKSPACE"/images/config/vendor_file_contexts
-  echo "vendor/lib64/egl/libVkLayer_ADRENO_qprofiler.so 0 0 0644" | sudo tee -a "$GITHUB_WORKSPACE"/images/config/vendor_fs_config
-  echo "/vendor/lib64/egl/libVkLayer_ADRENO_qprofiler\.so u:object_r:system_lib_file:s0" | sudo tee -a "$GITHUB_WORKSPACE"/images/config/vendor_file_contexts
-  echo "vendor/firmware/a650_sqe.fw 0 0 0644" | sudo tee -a "$GITHUB_WORKSPACE"/images/config/vendor_fs_config
-  echo "/vendor/firmware/a650_sqe\.fw u:object_r:system_file:s0" | sudo tee -a "$GITHUB_WORKSPACE"/images/config/vendor_file_contexts
-fi
+echo "正在复制文件..."
+mkdir -p "$GITHUB_WORKSPACE"/images
+\cp -rf "$GITHUB_WORKSPACE"/files/common/* "$GITHUB_WORKSPACE"/images/
+echo "处理build.prop"
+cat "$GITHUB_WORKSPACE"/files/build.prop >> "$GITHUB_WORKSPACE"/images/mi_ext/etc/build.prop
+curl -s https://api.github.com/repos/BaSO4X/Backup/releases/tags/k50 | grep -o 'https://[^"]*MiuiCamera\.apk' | xargs -I {} aria2c -x16 -s16 -o MiuiCamera.apk {} -d "${GITHUB_WORKSPACE}/images/product/priv-app/MiuiCamera"
+
 End_Time 功能修复
 ### 功能修复结束
 
 ### 生成 super.img
 echo -e "${Red}- 开始打包super.img"
 Start_Time
-partitions=("mi_ext" "product" "system" "system_ext" "vendor" "odm" "vendor_dlkm")
+partitions=("mi_ext" "product" "system" "system_ext" "vendor" "odm" "vendor_dlkm" "odm_dlkm")
   for partition in "${partitions[@]}"; do
     echo -e "${Red}- 正在生成: $partition"
     sudo python3 "$GITHUB_WORKSPACE"/tools/fspatch.py "$GITHUB_WORKSPACE"/images/$partition "$GITHUB_WORKSPACE"/images/config/"$partition"_fs_config
     sudo python3 "$GITHUB_WORKSPACE"/tools/contextpatch.py "$GITHUB_WORKSPACE"/images/$partition "$GITHUB_WORKSPACE"/images/config/"$partition"_file_contexts None
     Start_Time
-    sudo $erofs_mkfs --quiet -zlz4hc,9 -T 1230768000 --mount-point /$partition --fs-config-file "$GITHUB_WORKSPACE"/images/config/"$partition"_fs_config --file-contexts "$GITHUB_WORKSPACE"/images/config/"$partition"_file_contexts "$GITHUB_WORKSPACE"/super/$partition.img "$GITHUB_WORKSPACE"/images/$partition
+    sudo $erofs_mkfs --quiet -zlz4hc,9 -T 1230768000 --mount-point /$partition --fs-config-file "$GITHUB_WORKSPACE"/images/config/"$partition"_fs_config --file-contexts "$GITHUB_WORKSPACE"/images/config/"$partition"_file_contexts "$GITHUB_WORKSPACE"/super_raw/$partition.img "$GITHUB_WORKSPACE"/images/$partition
     End_Time 打包erofs
+    img2simg "$GITHUB_WORKSPACE"/super_raw/$partition.img "$GITHUB_WORKSPACE"/super/$partition.img
     eval "$partition"_size=$(du -sb "$GITHUB_WORKSPACE"/super/$partition.img | awk {'print $1'})
     sudo rm -rf "$GITHUB_WORKSPACE"/images/$partition
   done
@@ -297,6 +247,9 @@ partitions=("mi_ext" "product" "system" "system_ext" "vendor" "odm" "vendor_dlkm
   --partition vendor_dlkm_a:readonly:"$vendor_dlkm_size":qti_dynamic_partitions_a \
   --image vendor_dlkm_a="$GITHUB_WORKSPACE"/super/vendor_dlkm.img \
   --partition vendor_dlkm_b:readonly:0:qti_dynamic_partitions_b \
+  --partition odm_dlkm_a:readonly:"$odm_dlkm_size":qti_dynamic_partitions_a \
+  --image odm_dlkm_a="$GITHUB_WORKSPACE"/super/odm_dlkm.img \
+  --partition odm_dlkm_b:readonly:0:qti_dynamic_partitions_b \
   --device super:9126805504 \
   --metadata-slots 3 \
   --group qti_dynamic_partitions_a:9126805504 \
@@ -314,23 +267,15 @@ echo -e "${Red}- 开始生成刷机包"
 echo -e "${Red}- 开始压缩super"
 Start_Time
 sudo find "$GITHUB_WORKSPACE"/super/ -exec touch -t 200901010000.00 {} \;
-zstd -3 -f "$GITHUB_WORKSPACE"/super/super.img -o "$GITHUB_WORKSPACE"/firmware/super.img.zst
+zstd -3 -f "$GITHUB_WORKSPACE"/super/super.img -o "$GITHUB_WORKSPACE"/zip/super.img.zst
 rm -f "$GITHUB_WORKSPACE"/super/super.img
 End_Time 压缩super
-# 生成刷机包
-echo -e "${Red}- 生成刷机包"
-Start_Time
-cd "$GITHUB_WORKSPACE"/firmware
-zip -r -1 "$GITHUB_WORKSPACE"/zip/marble_HyperT-${port_os_version}-BaSO4.zip $(ls | grep -v '^super.img.zst$')
-zip -0 -u "$GITHUB_WORKSPACE"/zip/marble_HyperT-${port_os_version}-BaSO4.zip super.img.zst
-sudo rm -rf "$GITHUB_WORKSPACE"/images
-End_Time 压缩卡刷包
 # 定制 ROM 包名
 echo -e "${Red}- 定制 ROM 包名"
-md5=$(md5sum "$GITHUB_WORKSPACE"/zip/marble_HyperT-${port_os_version}-BaSO4.zip)
+md5=$(md5sum "$GITHUB_WORKSPACE"/zip/super.img.zst)
 echo "MD5=${md5:0:32}" >>$GITHUB_ENV
 zip_md5=${md5:0:10}
-rom_name="marble_HyperT-${port_os_version}-BaSO4-${zip_md5}.zip"
-sudo mv "$GITHUB_WORKSPACE"/zip/marble_HyperT-${port_os_version}-BaSO4.zip "$GITHUB_WORKSPACE"/zip/"${rom_name}"
+rom_name="super-${port_os_version}-${zip_md5}.zst"
+sudo mv "$GITHUB_WORKSPACE"/zip/super.img.zst "$GITHUB_WORKSPACE"/zip/"${rom_name}"
 echo "rom_name=$rom_name" >>$GITHUB_ENV
 ### 输出刷机包结束

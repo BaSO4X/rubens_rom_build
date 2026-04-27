@@ -1,0 +1,22 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<!-- MIUI ADD:Build_MIUIBuildFrame -->
+<displayConfiguration>
+    <screenBrightnessMap>
+        <point>
+            <value>0.0</value>
+            <nits>1.0</nits>
+        </point>
+        <point>
+            <value>0.5</value>
+            <nits>500.0</nits>
+        </point>
+        <point>
+            <value>1.0</value>
+            <nits>800.0</nits>
+        </point>
+    </screenBrightnessMap>
+
+    <ambientLightHorizonLong>3000</ambientLightHorizonLong>
+    <ambientLightHorizonShort>1000</ambientLightHorizonShort>
+</displayConfiguration>
+<!-- END Build_MIUIBuildFrame -->
