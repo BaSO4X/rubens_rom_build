@@ -248,6 +248,9 @@ partitions=("mi_ext" "product" "system" "system_ext" "vendor" "odm" "vendor_dlkm
   --partition vendor_dlkm_a:readonly:"$vendor_dlkm_size":qti_dynamic_partitions_a \
   --image vendor_dlkm_a="$GITHUB_WORKSPACE"/super/vendor_dlkm.img \
   --partition vendor_dlkm_b:readonly:0:qti_dynamic_partitions_b \
+  --partition odm_dlkm_a:readonly:"$odm_dlkm_size":qti_dynamic_partitions_a \
+  --image odm_dlkm_a="$GITHUB_WORKSPACE"/super/odm_dlkm.img \
+  --partition odm_dlkm_b:readonly:0:qti_dynamic_partitions_b \
   --device super:9126805504 \
   --metadata-slots 3 \
   --group qti_dynamic_partitions_a:9126805504 \
