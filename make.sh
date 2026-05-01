@@ -130,7 +130,7 @@ echo -e "${Red}- 开始写入变量"
 echo "build_time=$build_time" >>$GITHUB_ENV
 echo -e "${Blue}- 构建日期: $build_time"
 # 移植包机型信息
-model=$(echo "$port_zip_name" | cut -d'-' -f1)
+model=$(echo "$port_zip_name" | cut -d'-' -f1 | head -n 1 | tr -d '\r')
 echo "model=$model" >> $GITHUB_ENV
 echo -e "${Blue}- 移植包机型: $model"
 # 移植包版本
@@ -140,28 +140,29 @@ echo -e "${Blue}- 移植包版本: $port_os_version"
 echo "vendor_os_version=$vendor_os_version" >>$GITHUB_ENV
 # 移植包安全补丁
 system_build_prop=$(find "$GITHUB_WORKSPACE"/images/system/system/ -maxdepth 1 -type f -name "build.prop" | head -n 1)
-port_security_patch=$(grep "ro.build.version.security_patch=" "$system_build_prop" | awk -F "=" '{print $2}')
+port_security_patch=$(grep "ro.build.version.security_patch=" "$system_build_prop" | awk -F "=" '{print $2}' | head -n 1 | tr -d '\r')
 echo -e "${Blue}- 移植包安全补丁版本: $port_security_patch"
 echo "port_security_patch=$port_security_patch" >>$GITHUB_ENV
 # 底包安全补丁
 vendor_build_prop=$GITHUB_WORKSPACE/images/vendor/build.prop
-vendor_security_patch=$(grep "ro.vendor.build.security_patch=" "$vendor_build_prop" | awk -F "=" '{print $2}')
+vendor_security_patch=$(grep "ro.vendor.build.security_patch=" "$vendor_build_prop" | awk -F "=" '{print $2}' | head -n 1 | tr -d '\r')
 echo -e "${Blue}- 底包安全补丁版本: $vendor_security_patch"
 echo "vendor_security_patch=$vendor_security_patch" >>$GITHUB_ENV
 # 移植包基线版本
-port_base_line=$(grep "ro.system.build.id=" "$system_build_prop" | awk -F "=" '{print $2}')
+port_base_line=$(grep "ro.system.build.id=" "$system_build_prop" | awk -F "=" '{print $2}' | head -n 1 | tr -d '\r')
 echo -e "${Blue}- 移植包基线版本: $port_base_line"
 echo "port_base_line=$port_base_line" >>$GITHUB_ENV
 # 底包vendor基线版本
-vendor_base_line=$(grep "ro.vendor.build.id=" "$vendor_build_prop" | awk -F "=" '{print $2}')
+vendor_base_line=$(grep "ro.vendor.build.id=" "$vendor_build_prop" | awk -F "=" '{print $2}' | head -n 1 | tr -d '\r')
 echo -e "${Blue}- 底包vendor基线版本: $vendor_base_line"
 echo "vendor_base_line=$vendor_base_line" >>$GITHUB_ENV
 # 增量版本号
 mi_ext_build_prop=$GITHUB_WORKSPACE/images/mi_ext/etc/build.prop
-incremental_version=$(grep "ro.mi.xms.version.incremental=" "$mi_ext_build_prop" | awk -F "=" '{print $2}')
+incremental_version=$(grep "ro.mi.xms.version.incremental=" "$mi_ext_build_prop" | awk -F "=" '{print $2}' | head -n 1 | tr -d '\r')
 echo -e "${Blue}- 增量版本号: $incremental_version"
 echo "incremental_version=$incremental_version" >>$GITHUB_ENV
 ### 写入变量结束
+
 
 ### 功能修复
 echo -e "${Red}- 开始功能修复"
