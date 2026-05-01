@@ -226,7 +226,7 @@ partitions=("mi_ext" "product" "system" "system_ext" "vendor" "odm" "vendor_dlkm
     sudo rm -rf "$GITHUB_WORKSPACE"/images/$partition
   done
   sudo rm -rf "$GITHUB_WORKSPACE"/images/config
-  $lpmake --metadata-size 65536 --super-name super --block-size 4096 \
+  $lpmake -v --metadata-size 65536 --super-name super --block-size 4096 \
   --partition mi_ext_a:readonly:"$mi_ext_size":qti_dynamic_partitions_a \
   --image mi_ext_a="$GITHUB_WORKSPACE"/super/mi_ext.img \
   --partition mi_ext_b:readonly:0:qti_dynamic_partitions_b \
