@@ -226,7 +226,7 @@ partitions=("mi_ext" "product" "system" "system_ext" "vendor" "odm" "vendor_dlkm
     sudo rm -rf "$GITHUB_WORKSPACE"/images/$partition
   done
   sudo rm -rf "$GITHUB_WORKSPACE"/images/config
-  $lpmake -v --metadata-size 65536 --super-name super --block-size 4096 \
+  $lpmake --metadata-size 65536 --super-name super --block-size 4096 \
   --partition mi_ext_a:readonly:"$mi_ext_size":qti_dynamic_partitions_a \
   --image mi_ext_a="$GITHUB_WORKSPACE"/super/mi_ext.img \
   --partition mi_ext_b:readonly:0:qti_dynamic_partitions_b \
@@ -248,14 +248,12 @@ partitions=("mi_ext" "product" "system" "system_ext" "vendor" "odm" "vendor_dlkm
   --partition vendor_dlkm_a:readonly:"$vendor_dlkm_size":qti_dynamic_partitions_a \
   --image vendor_dlkm_a="$GITHUB_WORKSPACE"/super/vendor_dlkm.img \
   --partition vendor_dlkm_b:readonly:0:qti_dynamic_partitions_b \
-  --partition odm_dlkm_a:readonly:"$odm_dlkm_size":qti_dynamic_partitions_a \
-  --image odm_dlkm_a="$GITHUB_WORKSPACE"/super/odm_dlkm.img \
-  --partition odm_dlkm_b:readonly:0:qti_dynamic_partitions_b \
   --device super:9126805504 \
   --metadata-slots 3 \
   --group qti_dynamic_partitions_a:9126805504 \
   --group qti_dynamic_partitions_b:9126805504 \
   --virtual-ab -F \
+  --sparse \
   --output "$GITHUB_WORKSPACE"/super/super.img
   End_Time 打包super
   for partition in "${partitions[@]}"; do
