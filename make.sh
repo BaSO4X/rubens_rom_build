@@ -94,7 +94,6 @@ mkdir -p "$GITHUB_WORKSPACE"/images/config
 mkdir -p "$GITHUB_WORKSPACE"/super
 mkdir -p "$GITHUB_WORKSPACE"/Extra_dir
 mkdir -p "$GITHUB_WORKSPACE"/zip
-mkdir -p "$GITHUB_WORKSPACE"/super_sparse
 
 echo -e "${Yellow}- 开始解压底包"
 Start_Time
@@ -219,8 +218,6 @@ partitions=("mi_ext" "product" "system" "system_ext" "vendor" "odm" "vendor_dlkm
     sudo python3 "$GITHUB_WORKSPACE"/tools/contextpatch.py "$GITHUB_WORKSPACE"/images/$partition "$GITHUB_WORKSPACE"/images/config/"$partition"_file_contexts None
     Start_Time
     sudo $erofs_mkfs --quiet -zlz4hc,9 -T 1230768000 --mount-point /$partition --fs-config-file "$GITHUB_WORKSPACE"/images/config/"$partition"_fs_config --file-contexts "$GITHUB_WORKSPACE"/images/config/"$partition"_file_contexts "$GITHUB_WORKSPACE"/super/$partition.img "$GITHUB_WORKSPACE"/images/$partition
-    img2simg "$GITHUB_WORKSPACE"/super/$partition.img "$GITHUB_WORKSPACE"/super_sparse/$partition.img
-    mv -f "$GITHUB_WORKSPACE"/super_sparse/"$partition".img "$GITHUB_WORKSPACE"/super/
     End_Time 打包erofs
     eval "$partition"_size=$(du -sb "$GITHUB_WORKSPACE"/super/$partition.img | awk {'print $1'})
     sudo rm -rf "$GITHUB_WORKSPACE"/images/$partition
