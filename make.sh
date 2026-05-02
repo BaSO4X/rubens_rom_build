@@ -94,6 +94,7 @@ mkdir -p "$GITHUB_WORKSPACE"/images/config
 mkdir -p "$GITHUB_WORKSPACE"/super
 mkdir -p "$GITHUB_WORKSPACE"/Extra_dir
 mkdir -p "$GITHUB_WORKSPACE"/zip
+mkdir -p "$GITHUB_WORKSPACE"/firmware
 
 echo -e "${Yellow}- 开始解压底包"
 Start_Time
@@ -267,16 +268,22 @@ echo -e "${Red}- 开始生成刷机包"
 echo -e "${Red}- 开始压缩super"
 Start_Time
 sudo find "$GITHUB_WORKSPACE"/super/ -exec touch -t 200901010000.00 {} \;
-zip -j -1 "$GITHUB_WORKSPACE"/zip/super.img.zip "$GITHUB_WORKSPACE"/super/super.img
-sudo rm -rf "$GITHUB_WORKSPACE"/images
+zstd -3 -f "$GITHUB_WORKSPACE"/super/super.img -o "$GITHUB_WORKSPACE"/firmware/super.img.zst
 rm -f "$GITHUB_WORKSPACE"/super/super.img
 End_Time 压缩super
+# 生成刷机包
+echo -e "${Red}- 生成刷机包"
+Start_Time
+cd "$GITHUB_WORKSPACE"/firmware
+zip -r -0 "$GITHUB_WORKSPACE"/zip/super.zip
+sudo rm -rf "$GITHUB_WORKSPACE"/images
+End_Time 压缩卡刷包
 # 定制 ROM 包名
 echo -e "${Red}- 定制 ROM 包名"
-md5=$(md5sum "$GITHUB_WORKSPACE"/zip/super.img.zip)
+md5=$(md5sum "$GITHUB_WORKSPACE"/zip/super.zip)
 echo "MD5=${md5:0:32}" >>$GITHUB_ENV
 zip_md5=${md5:0:10}
-rom_name="super-${port_os_version}-${zip_md5}.zip"
-sudo mv "$GITHUB_WORKSPACE"/zip/super.img.zip "$GITHUB_WORKSPACE"/zip/"${rom_name}"
+rom_name="super-${zip_md5}.zip"
+sudo mv "$GITHUB_WORKSPACE"/zip/super.zip "$GITHUB_WORKSPACE"/zip/"${rom_name}"
 echo "rom_name=$rom_name" >>$GITHUB_ENV
 ### 输出刷机包结束
