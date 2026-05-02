@@ -267,15 +267,17 @@ echo -e "${Red}- 开始生成刷机包"
 echo -e "${Red}- 开始压缩super"
 Start_Time
 sudo find "$GITHUB_WORKSPACE"/super/ -exec touch -t 200901010000.00 {} \;
-zstd -3 -f "$GITHUB_WORKSPACE"/super/super.img -o "$GITHUB_WORKSPACE"/zip/super.img.zst
+cd "$GITHUB_WORKSPACE"/super
+zip -r -1 "$GITHUB_WORKSPACE"/zip/super.img.zip
+sudo rm -rf "$GITHUB_WORKSPACE"/images
 rm -f "$GITHUB_WORKSPACE"/super/super.img
 End_Time 压缩super
 # 定制 ROM 包名
 echo -e "${Red}- 定制 ROM 包名"
-md5=$(md5sum "$GITHUB_WORKSPACE"/zip/super.img.zst)
+md5=$(md5sum "$GITHUB_WORKSPACE"/zip/super.img.zip)
 echo "MD5=${md5:0:32}" >>$GITHUB_ENV
 zip_md5=${md5:0:10}
-rom_name="super-${port_os_version}-${zip_md5}.zst"
-sudo mv "$GITHUB_WORKSPACE"/zip/super.img.zst "$GITHUB_WORKSPACE"/zip/"${rom_name}"
+rom_name="super-${port_os_version}-${zip_md5}.zip"
+sudo mv "$GITHUB_WORKSPACE"/zip/super.img.zip "$GITHUB_WORKSPACE"/zip/"${rom_name}"
 echo "rom_name=$rom_name" >>$GITHUB_ENV
 ### 输出刷机包结束
