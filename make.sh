@@ -267,8 +267,7 @@ echo -e "${Red}- 开始生成刷机包"
 echo -e "${Red}- 开始压缩super"
 Start_Time
 sudo find "$GITHUB_WORKSPACE"/super/ -exec touch -t 200901010000.00 {} \;
-cd "$GITHUB_WORKSPACE"/super
-zip -r -1 "$GITHUB_WORKSPACE"/zip/super.img.zip
+zip -j -1 "$GITHUB_WORKSPACE"/zip/super.img.zip "$GITHUB_WORKSPACE"/super/super.img
 sudo rm -rf "$GITHUB_WORKSPACE"/images
 rm -f "$GITHUB_WORKSPACE"/super/super.img
 End_Time 压缩super
