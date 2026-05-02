@@ -94,7 +94,6 @@ mkdir -p "$GITHUB_WORKSPACE"/images/config
 mkdir -p "$GITHUB_WORKSPACE"/super
 mkdir -p "$GITHUB_WORKSPACE"/Extra_dir
 mkdir -p "$GITHUB_WORKSPACE"/zip
-mkdir -p "$GITHUB_WORKSPACE"/firmware
 
 echo -e "${Yellow}- 开始解压底包"
 Start_Time
@@ -268,14 +267,13 @@ echo -e "${Red}- 开始生成刷机包"
 echo -e "${Red}- 开始压缩super"
 Start_Time
 sudo find "$GITHUB_WORKSPACE"/super/ -exec touch -t 200901010000.00 {} \;
-zstd -3 -f "$GITHUB_WORKSPACE"/super/super.img -o "$GITHUB_WORKSPACE"/firmware/super.img.zst
+zstd -3 -f "$GITHUB_WORKSPACE"/super/super.img -o "$GITHUB_WORKSPACE"/super/super.img.zst
 rm -f "$GITHUB_WORKSPACE"/super/super.img
 End_Time 压缩super
 # 生成刷机包
 echo -e "${Red}- 生成刷机包"
 Start_Time
-cd "$GITHUB_WORKSPACE"/firmware
-zip -r -0 "$GITHUB_WORKSPACE"/zip/super.zip
+sudo $a7z a -mx=0 -bd "$GITHUB_WORKSPACE"/zip/super.zip "$GITHUB_WORKSPACE"/super/super.img.zst
 sudo rm -rf "$GITHUB_WORKSPACE"/images
 End_Time 压缩卡刷包
 # 定制 ROM 包名
