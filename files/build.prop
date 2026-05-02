@@ -188,5 +188,4 @@ persist.vendor.display.miui.composer_boost=4-7
 
 persist.sys.transition_rt.enable=true
 persist.sys.transition_beginSchedThreads.enable=true
-ro.product.mod_device=pudding
 
