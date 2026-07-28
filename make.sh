@@ -196,7 +196,6 @@ rm -rf "$GITHUB_WORKSPACE"/images/product/priv-app/MiniGameService
 rm -rf "$GITHUB_WORKSPACE"/images/product/priv-app/MIUIBrowser
 rm -rf "$GITHUB_WORKSPACE"/images/product/priv-app/MiuiCamera
 rm -rf "$GITHUB_WORKSPACE"/images/product/pangu/system/app/Nfc_st
-rm -rf "$GITHUB_WORKSPACE"/images/mi_ext/product/ai/taiyi
 echo "精简apk完成"
 echo "正在复制文件..."
 mkdir -p "$GITHUB_WORKSPACE"/images
